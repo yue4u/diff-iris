@@ -1,18 +1,18 @@
 {
-  "name": "diff-prism",
+  "name": "diff-iris",
   "version": "0.0.1",
   "description": "Parse and show package.json dependency changes in Git history.",
-  "homepage": "https://github.com/yue4u/diff-prism",
+  "homepage": "https://github.com/yue4u/diff-iris",
   "bugs": {
-    "url": "https://github.com/yue4u/diff-prism/issues"
+    "url": "https://github.com/yue4u/diff-iris/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yue4u/diff-prism.git"
+    "url": "git+https://github.com/yue4u/diff-iris.git"
   },
   "bin": {
-    "diff-prism": "./dist/cli.mjs"
+    "diff-iris": "./dist/cli.mjs"
   },
   "files": [
     "dist"

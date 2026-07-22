@@ -34,7 +34,7 @@ function commit(
 }
 
 function createRepository(): string {
-  const directory = mkdtempSync(join(tmpdir(), "diff-prism-test-"));
+  const directory = mkdtempSync(join(tmpdir(), "diff-iris-test-"));
   git(directory, "init", "--initial-branch=main");
   git(directory, "config", "user.name", "Test Author");
   git(directory, "config", "user.email", "author@example.test");
@@ -140,11 +140,9 @@ test("routes redirected output and TTY output separately", async () => {
     await runCli({ cwd: directory, isTTY: true, stdout: sink("out"), stderr: sink("err") }),
   ).toBe(0);
   expect(stdout).toBe("");
-  expect(stderr).toContain(".diff-prism/index.html");
+  expect(stderr).toContain(".diff-iris/index.html");
   expect(
-    readFileSync(join(directory, ".diff-prism", "index.html"), "utf8").startsWith(
-      "<!doctype html>",
-    ),
+    readFileSync(join(directory, ".diff-iris", "index.html"), "utf8").startsWith("<!doctype html>"),
   ).toBe(true);
 });
 

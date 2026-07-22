@@ -1,24 +1,24 @@
-# diff-prism
+# diff-iris
 
 Parse and show structured data in git history.
 
-Repository: <https://github.com/yue4u/diff-prism>
+Repository: <https://github.com/yue4u/diff-iris>
 
 ## How to use
 
 ```bash
-pnpm dlx diff-prism
-# Analyze the root package.json reachable from HEAD and create .diff-prism/index.html.
+pnpm dlx diff-iris
+# Analyze the root package.json reachable from HEAD and create .diff-iris/index.html.
 
-pnpm dlx diff-prism > index.html
+pnpm dlx diff-iris > index.html
 # When stdout is redirected or piped, emit the HTML document instead of writing a file.
 
-pnpm dlx diff-prism --since 2024-01-01 --until 2024-12-31
+pnpm dlx diff-iris --since 2024-01-01 --until 2024-12-31
 # Include only changes within an inclusive UTC date range.
 ```
 
 > [!WARNING]
-> Only run `diff-prism` inside repositories you trust. It invokes the repository's local Git
+> Only run `diff-iris` inside repositories you trust. It invokes the repository's local Git
 > installation and reads committed manifest and commit metadata to generate an executable HTML
 > report.
 

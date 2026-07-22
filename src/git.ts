@@ -176,7 +176,7 @@ async function readHistory(cwd: string): Promise<GitHistory> {
   try {
     repositoryRoot = await gitText(["rev-parse", "--show-toplevel"], cwd);
   } catch {
-    throw new Error("diff-prism must be run inside a Git repository");
+    throw new Error("diff-iris must be run inside a Git repository");
   }
 
   let revision: string;

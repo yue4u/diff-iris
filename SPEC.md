@@ -1,8 +1,8 @@
-# diff-prism specification
+# diff-iris specification
 
 ## Command
 
-`diff-prism` runs inside a trusted Git repository and analyzes the root `package.json` reachable from
+`diff-iris` runs inside a trusted Git repository and analyzes the root `package.json` reachable from
 the current `HEAD`. It resolves the repository root when invoked from a subdirectory. Uncommitted
 working-tree changes, nested manifests, lockfiles, other refs, and network metadata are excluded.
 
@@ -11,7 +11,7 @@ Date options also accept `--since=DATE` and `--until=DATE`; dates use `YYYY-MM-D
 boundaries. Either bound may be omitted. Invalid dates, reversed ranges, unsupported arguments, and
 missing Git context produce a nonzero exit status and a concise message on stderr.
 
-When stdout is a terminal, the command writes `.diff-prism/index.html` at the repository root and
+When stdout is a terminal, the command writes `.diff-iris/index.html` at the repository root and
 prints its path to stderr. When stdout is redirected or piped, it emits only HTML to stdout and does
 not create the default report file. Warnings and errors always use stderr.
 
@@ -57,7 +57,7 @@ APIs, never interpreted through `innerHTML`.
 
 The report contains:
 
-- repository, ref, revision, report generation time, and diff-prism version metadata;
+- repository, ref, revision, report generation time, and diff-iris version metadata;
 - the analyzed repository's normalized HTTPS `origin` link when available;
 - net totals for visible commits, additions, updates, and removals, including package names and each
   package's first-to-final version diff;
@@ -103,6 +103,6 @@ updates, filtering continues without URL persistence.
 
 ## Security and compatibility
 
-Only run `diff-prism` inside repositories you trust. The command invokes the local Git executable and
+Only run `diff-iris` inside repositories you trust. The command invokes the local Git executable and
 reads committed repository content. The generated report is designed for current browsers supporting
 standard range/date inputs, URL APIs, CSS custom properties, and modern JavaScript collections.

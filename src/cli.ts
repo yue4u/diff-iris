@@ -16,11 +16,11 @@ interface CliOptions {
   stderr?: Pick<NodeJS.WriteStream, "write">;
 }
 
-const help = `Usage: diff-prism
+const help = `Usage: diff-iris
 
 Analyze dependency changes in the root package.json reachable from HEAD.
 
-When stdout is a terminal, writes .diff-prism/index.html in the repository.
+When stdout is a terminal, writes .diff-iris/index.html in the repository.
 When stdout is redirected or piped, writes the HTML document to stdout.
 
 Options:
@@ -103,28 +103,28 @@ export async function runCli(options: CliOptions = {}): Promise<number> {
     range = parseDateRange(args);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    stderr.write(`diff-prism: ${message}\n`);
+    stderr.write(`diff-iris: ${message}\n`);
     return 1;
   }
 
   try {
     const { report, repositoryRoot, warnings } = await createReport(cwd);
     filterReport(report, range);
-    for (const warning of warnings) stderr.write(`diff-prism: warning: ${warning}\n`);
+    for (const warning of warnings) stderr.write(`diff-iris: warning: ${warning}\n`);
     const html = renderReport(report);
     if (!isTTY) {
       stdout.write(html);
       return 0;
     }
 
-    const outputPath = join(repositoryRoot, ".diff-prism", "index.html");
+    const outputPath = join(repositoryRoot, ".diff-iris", "index.html");
     await mkdir(dirname(outputPath), { recursive: true });
     await writeFile(outputPath, html, "utf8");
     stderr.write(`Created ${outputPath}\n`);
     return 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    stderr.write(`diff-prism: ${message}\n`);
+    stderr.write(`diff-iris: ${message}\n`);
     return 1;
   }
 }

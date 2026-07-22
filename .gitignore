@@ -12,4 +12,4 @@ dist
 !.env.example
 
 tmp
-.diff-prism
+.diff-iris

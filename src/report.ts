@@ -3,7 +3,7 @@ import styles from "./report.css.txt?raw";
 import packageJson from "../package.json?raw";
 import type { Report } from "./types.ts";
 
-const diffPrismVersion = (JSON.parse(packageJson) as { version: string }).version;
+const diffIrisVersion = (JSON.parse(packageJson) as { version: string }).version;
 
 function serializeForHtml(value: unknown): string {
   return JSON.stringify(value)
@@ -50,12 +50,12 @@ export function renderReport(report: Report): string {
 <body>
   <main>
     <header class="hero">
-      <div class="eyebrow">diff-prism · package.json</div>
+      <div class="eyebrow">diff-iris · package.json</div>
       <h1>${escapeHtml(report.repository)}</h1>
       <p class="revision">${escapeHtml(report.repository)} · ${escapeHtml(report.ref)} · <code>${escapeHtml(report.revision.slice(0, 12))}</code>${repositoryLink}</p>
       <p class="generated">
         <span>Generated ${escapeHtml(report.generatedAt)}</span>
-        <span>diff-prism ${escapeHtml(diffPrismVersion)}</span>
+        <span>diff-iris ${escapeHtml(diffIrisVersion)}</span>
       </p>
     </header>
     <section class="totals" aria-label="Change totals">${totalCards}</section>
