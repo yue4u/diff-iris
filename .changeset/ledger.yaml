@@ -2,3 +2,7 @@ diff-iris@0.0.1:
   dir: ""
   intents:
     - tender-windows-fail
+diff-iris@0.0.2:
+  dir: ""
+  intents:
+    - rich-towns-send

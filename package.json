@@ -1,6 +1,6 @@
 {
   "name": "diff-iris",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Parse and show package.json dependency changes in Git history.",
   "homepage": "https://github.com/yue4u/diff-iris",
   "bugs": {
@@ -42,11 +42,5 @@
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.15.1",
-      "onFail": "download"
-    }
-  }
+  "packageManager": "pnpm@11.15.1"
 }
