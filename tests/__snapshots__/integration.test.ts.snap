@@ -57,7 +57,10 @@ h1 {
 }
 .generated {
   color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
   font-size: 14px;
+  gap: 4px 12px;
   margin: 8px 0 0;
 }
 .revision a {
@@ -455,7 +458,10 @@ button:hover {
       <div class="eyebrow">diff-prism · package.json</div>
       <h1>fixture</h1>
       <p class="revision">fixture · main · <code>2a9fbe92c9c5</code> · <a href="https://github.com/example/fixture" rel="noreferrer" target="_blank">https://github.com/example/fixture</a></p>
-      <p class="generated">Generated 2026-01-01T00:00:00Z · diff-prism 0.0.0</p>
+      <p class="generated">
+        <span>Generated 2026-01-01T00:00:00Z</span>
+        <span>diff-prism 0.0.1</span>
+      </p>
     </header>
     <section class="totals" aria-label="Change totals"><div class="total total-commits"><strong id="total-commits">1</strong><span>commits</span></div><div class="total total-added"><strong id="total-added">1</strong><span>added</span><ul class="total-packages" id="total-added-packages"></ul></div><div class="total total-removed"><strong id="total-removed">0</strong><span>removed</span><ul class="total-packages" id="total-removed-packages"></ul></div><div class="total total-updated"><strong id="total-updated">0</strong><span>updated</span><ul class="total-packages" id="total-updated-packages"></ul></div></section>
     <section class="range-panel" id="range-controls" aria-labelledby="timeline-title">

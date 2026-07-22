@@ -48,7 +48,10 @@ h1 {
 }
 .generated {
   color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
   font-size: 14px;
+  gap: 4px 12px;
   margin: 8px 0 0;
 }
 .revision a {

@@ -53,7 +53,10 @@ export function renderReport(report: Report): string {
       <div class="eyebrow">diff-prism · package.json</div>
       <h1>${escapeHtml(report.repository)}</h1>
       <p class="revision">${escapeHtml(report.repository)} · ${escapeHtml(report.ref)} · <code>${escapeHtml(report.revision.slice(0, 12))}</code>${repositoryLink}</p>
-      <p class="generated">Generated ${escapeHtml(report.generatedAt)} · diff-prism ${escapeHtml(diffPrismVersion)}</p>
+      <p class="generated">
+        <span>Generated ${escapeHtml(report.generatedAt)}</span>
+        <span>diff-prism ${escapeHtml(diffPrismVersion)}</span>
+      </p>
     </header>
     <section class="totals" aria-label="Change totals">${totalCards}</section>
     <section class="range-panel" id="range-controls" aria-labelledby="timeline-title">

@@ -1,6 +1,6 @@
 {
   "name": "diff-prism",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Parse and show package.json dependency changes in Git history.",
   "homepage": "https://github.com/yue4u/diff-prism",
   "bugs": {
