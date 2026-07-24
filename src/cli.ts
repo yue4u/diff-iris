@@ -1,7 +1,7 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { Temporal } from "temporal-polyfill-lite";
 import packageJson from "../package.json" with { type: "json" };
 import { createReport } from "./git.ts";
@@ -130,6 +130,6 @@ export async function runCli(options: CliOptions = {}): Promise<number> {
 }
 
 const entryPath = process.argv[1];
-if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
+if (entryPath && import.meta.filename === realpathSync(entryPath)) {
   process.exitCode = await runCli();
 }
