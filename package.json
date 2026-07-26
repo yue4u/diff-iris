@@ -1,6 +1,6 @@
 {
   "name": "diff-iris",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Parse and show package.json dependency changes in Git history.",
   "homepage": "https://github.com/yue4u/diff-iris",
   "bugs": {

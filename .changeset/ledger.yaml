@@ -10,3 +10,7 @@ diff-iris@0.0.3:
   dir: ""
   intents:
     - four-rivers-draw
+diff-iris@0.0.4:
+  dir: ""
+  intents:
+    - cozy-terms-punch
