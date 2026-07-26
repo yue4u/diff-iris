@@ -236,6 +236,7 @@ function renderTimeline() {
 }
 
 function update() {
+  const scrollTop = document.scrollingElement?.scrollTop;
   let start = Number(startSlider.value);
   let end = Number(endSlider.value);
   if (start > end) {
@@ -274,6 +275,7 @@ function update() {
   liveRange.textContent = `Selected ${summary}`;
   eventList.replaceChildren(...visible.map(renderEvent));
   emptyState.hidden = visible.length !== 0;
+  if (scrollTop !== undefined) document.scrollingElement.scrollTop = scrollTop;
 }
 
 if (dates.length) {

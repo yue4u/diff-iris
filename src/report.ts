@@ -58,7 +58,6 @@ export function renderReport(report: Report): string {
         <span>diff-iris ${escapeHtml(diffIrisVersion)}</span>
       </p>
     </header>
-    <section class="totals" aria-label="Change totals">${totalCards}</section>
     <section class="range-panel" id="range-controls" aria-labelledby="timeline-title">
       <h2 id="timeline-title">Timeline</h2>
       <div class="timeline">
@@ -77,6 +76,7 @@ export function renderReport(report: Report): string {
       <p id="range-summary"></p>
       <p class="sr-only" id="live-range" aria-live="polite"></p>
     </section>
+    <section class="totals" aria-label="Change totals">${totalCards}</section>
     <div class="section-title"><h2>Dependency changes</h2></div>
     <section id="events" aria-label="Dependency change commits"></section>
     <p class="empty" id="empty-state" hidden>No commits fall within this range.</p>
