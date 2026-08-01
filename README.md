@@ -15,12 +15,25 @@ pnpm dlx diff-iris > index.html
 
 pnpm dlx diff-iris --since 2024-01-01 --until 2024-12-31
 # Include only changes within an inclusive UTC date range.
+
+pnpm dlx diff-iris ownership 'Alice|Bob'
+# Count HEAD files with surviving lines authored by Alice or Bob.
+
+pnpm dlx diff-iris ownership --author Alice --author Bob --jobs 16
+# Repeat author patterns and control the bounded parallel blame workers.
+
+pnpm dlx diff-iris ownership --rank
+# Count every author once, then rank by attributed files and lines.
+
+pnpm dlx diff-iris ownership --rank --format json
+pnpm dlx diff-iris ownership --rank --format html > ownership.html
+# Emit structured JSON or a standalone HTML ranking report.
 ```
 
 > [!WARNING]
 > Only run `diff-iris` inside repositories you trust. It invokes the repository's local Git
-> installation and reads committed manifest and commit metadata to generate an executable HTML
-> report.
+> installation and reads committed repository content and metadata. The default command generates
+> an executable HTML report.
 
 ## Features
 
@@ -32,6 +45,8 @@ pnpm dlx diff-iris --since 2024-01-01 --until 2024-12-31
 - synchronized timeline slider and UTC date pickers for selecting a time range
 - shareable `?from=YYYY-MM-DD&to=YYYY-MM-DD` time-range URLs
 - offline report with no external scripts, styles, fonts, or network requests
+- fast, regex-aware file ownership counts based on surviving blamed lines
+- automatic Git commit-graph maintenance for faster ownership analysis in large repositories
 
 ## Spec
 

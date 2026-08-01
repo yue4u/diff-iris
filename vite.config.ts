@@ -15,8 +15,7 @@ function rawAssets() {
   };
 }
 
-function inlineReportClient() {
-  const virtualId = "virtual:inline-report-client";
+function inlineClient(virtualId: string, entry: string, name: string) {
   const resolvedVirtualId = `\0${virtualId}`;
   return {
     name: "inline-report-client",
@@ -36,9 +35,9 @@ function inlineReportClient() {
         build: {
           write: false,
           lib: {
-            entry: resolve("src/browser/client.ts"),
+            entry: resolve(entry),
             formats: ["iife"],
-            name: "DiffIrisReport",
+            name,
           },
         },
       });
@@ -55,7 +54,15 @@ function inlineReportClient() {
 }
 
 export default defineConfig({
-  plugins: [rawAssets(), inlineReportClient()],
+  plugins: [
+    rawAssets(),
+    inlineClient("virtual:inline-report-client", "src/browser/client.ts", "DiffIrisReport"),
+    inlineClient(
+      "virtual:inline-ownership-client",
+      "src/browser/ownership-client.ts",
+      "DiffIrisOwnership",
+    ),
+  ],
   staged: {
     "*": "vp check --fix",
   },
@@ -63,7 +70,15 @@ export default defineConfig({
     entry: ["src/cli/cli.ts"],
     platform: "node",
     dts: false,
-    plugins: [rawAssets(), inlineReportClient()],
+    plugins: [
+      rawAssets(),
+      inlineClient("virtual:inline-report-client", "src/browser/client.ts", "DiffIrisReport"),
+      inlineClient(
+        "virtual:inline-ownership-client",
+        "src/browser/ownership-client.ts",
+        "DiffIrisOwnership",
+      ),
+    ],
   },
   lint: {
     options: {
