@@ -2,7 +2,7 @@ import { basename } from "node:path";
 import { spawn } from "node:child_process";
 import { Temporal } from "temporal-polyfill-lite";
 import { diffDependencies, parsePackageJson, type DependencySnapshot } from "./manifest.ts";
-import type { HistoryEvent, Report } from "./types.ts";
+import type { HistoryEvent, Report } from "../shared/types.ts";
 
 const zeroObjectId = /^0+$/;
 const rawChangePattern = /^:[0-7]{6} [0-7]{6} ([0-9a-f]+) ([0-9a-f]+) ([A-Z])[0-9]*$/;

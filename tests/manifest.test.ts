@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { diffDependencies, parsePackageJson } from "../src/manifest.ts";
+import { diffDependencies, parsePackageJson } from "../src/cli/manifest.ts";
 
 describe("package.json dependencies", () => {
   test("parses the four supported dependency sections", () => {

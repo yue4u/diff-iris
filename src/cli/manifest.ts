@@ -3,7 +3,7 @@ import {
   type DependencyChange,
   type DependencyLocation,
   type DependencySection,
-} from "./types.ts";
+} from "../shared/types.ts";
 
 export type DependencySnapshot = Map<string, DependencyLocation>;
 

@@ -144,13 +144,19 @@ code {
   border-radius: 10px;
   box-shadow: 0 12px 32px rgb(0 0 0 / 32%);
   color: var(--ink);
-  inset: unset;
+  inset: auto;
+  left: anchor(left);
   margin: 0;
   max-height: min(320px, calc(100vh - 16px));
   max-width: min(360px, calc(100vw - 16px));
   overflow: auto;
   padding: 12px 14px;
-  position: fixed;
+  position: absolute;
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
+  top: calc(anchor(bottom) + 6px);
 }
 .committer-popover-title {
   display: block;

@@ -28,20 +28,24 @@
     "build": "vp pack",
     "dev": "vp pack --watch",
     "test": "vp test",
-    "check": "vp check",
+    "check": "vp check && vue-tsc --noEmit",
     "prepublishOnly": "vp run build",
     "prepare": "vp config"
   },
   "dependencies": {
     "semver": "^7.8.5",
-    "temporal-polyfill-lite": "^0.4.2"
+    "temporal-polyfill-lite": "^0.4.2",
+    "vue": "3.6.0-rc.2"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "@types/semver": "^7.7.1",
-    "typescript": "^7.0.2",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitejs/plugin-vue": "6.0.8",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vue-tsc": "3.3.9"
   },
   "packageManager": "pnpm@11.15.1"
 }

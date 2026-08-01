@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Temporal } from "temporal-polyfill-lite";
 import { expect, test } from "vite-plus/test";
-import { runCli } from "../src/cli.ts";
-import { createReport } from "../src/git.ts";
-import { renderReport } from "../src/report.ts";
+import { runCli } from "../src/cli/cli.ts";
+import { createReport } from "../src/cli/git.ts";
+import { renderReport } from "../src/cli/report.ts";
 
 function git(cwd: string, ...args: string[]): string {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
