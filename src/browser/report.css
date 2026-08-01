@@ -626,4 +626,11 @@ button:hover {
     --patch: #187268;
     --other: #625d68;
   }
+  .total-committer-trigger {
+    background: #f0ebf3;
+    border-color: #aaa0bc;
+  }
+  .total-committer-count {
+    color: #ffffff;
+  }
 }
