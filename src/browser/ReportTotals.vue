@@ -1,6 +1,12 @@
 <script setup vapor lang="ts">
 import type { DependencyLocation } from "../shared/types.ts";
-import type { ReportView, UpdateKind } from "./report-view-types.ts";
+import type { ReportView, SummaryKind, UpdateKind } from "./report-view-types.ts";
+
+const packageOperations: Record<SummaryKind, string> = {
+  added: "+",
+  updated: "",
+  removed: "−",
+};
 
 defineProps<{
   view: Pick<ReportView, "committers" | "packageSummary" | "totals" | "updatedGroups">;
@@ -107,7 +113,18 @@ defineProps<{
         {{ committer.packages.length === 1 ? "package" : "packages" }}
       </span>
       <ul class="committer-popover-packages">
-        <li v-for="name in committer.packages" :key="name">{{ name }}</li>
+        <li v-for="packageChange in committer.packages" :key="packageChange.name">
+          <span
+            v-if="packageOperations[packageChange.type]"
+            :class="`committer-package-kind committer-package-kind-${packageChange.type}`"
+            aria-hidden="true"
+          >
+            {{ packageOperations[packageChange.type] }}
+          </span>
+          <span :class="{ 'committer-package-name-default': packageChange.type === 'updated' }">
+            {{ packageChange.name }}
+          </span>
+        </li>
       </ul>
     </div>
   </div>
