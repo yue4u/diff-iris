@@ -44,29 +44,35 @@ The collector uses one NUL-delimited `git log --full-history --raw` invocation f
 blob IDs, then one `git cat-file --batch` invocation for unique manifest blobs. It must not spawn one
 Git process per commit. Binary process output is handled as `Uint8Array`, not Node.js `Buffer`.
 
-Commit data includes full SHA, canonical `.mailmap` author name and email, committer timestamp,
-subject, and complete multiline commit message. Timestamps are normalized with the `Temporal` API
-provided by `temporal-polyfill-lite` and grouped by UTC calendar date.
+Commit data includes full SHA, canonical `.mailmap` author name and email, canonical committer name,
+committer timestamp, subject, and complete multiline commit message. Timestamps are normalized with
+the `Temporal` API provided by `temporal-polyfill-lite` and grouped by UTC calendar date.
 
 ## HTML report
 
-The report is one offline HTML document with CSS and plain browser JavaScript embedded from `?raw`
-source imports. It makes no external requests and has no UI framework dependency. Repository and Git
-content is untrusted data: it is escaped during serialization and inserted into the UI with text DOM
-APIs, never interpreted through `innerHTML`.
+The report is one offline HTML document with embedded CSS and a compiled Vue Vapor client. The client
+is authored as type-checked TypeScript and Vue SFC templates, then bundled to an inline IIFE during
+`vp pack`; it makes no external requests. Repository and Git content is untrusted data: it is escaped
+during serialization and rendered as template text or text DOM properties, never interpreted through
+`innerHTML`.
 
 The report contains:
 
 - repository, ref, revision, report generation time, and diff-iris version metadata;
 - the analyzed repository's normalized HTTPS `origin` link when available;
-- net totals for visible commits, additions, updates, and removals, including package names and each
-  package's first-to-final version diff;
+- net totals for visible commits, additions, updates, and removals, including commit counts grouped
+  by canonical committer name, package names, and each package's first-to-final version diff;
+- native hint popovers on committer totals that list the packages changed by that committer;
 - a horizontal density timeline with start and end handles;
 - synchronized UTC start and end date inputs;
 - a reset-range control;
 - newest-first commit cards with author, time, subject, SHA, and expandable full message;
 - dependency changes grouped as `deps`, `dev`, `peer`, and `optional`;
 - Git-style addition/removal markers, struck-through deletions, and inline old-to-new version updates.
+
+The dependency-change section initially shows up to three commit cards. Additional cards use
+`hidden="until-found"` so browser Find can reveal matching commits and packages, and an explicit
+control reveals all remaining cards for ordinary browsing.
 
 The default dark theme uses the `#261C2C`, `#3E2C41`, `#5C527F`, and `#6E85B2` palette. A
 `prefers-color-scheme: light` theme uses palette-derived light surfaces and darker semantic text
@@ -78,10 +84,20 @@ Moving either timeline handle or changing a date filters commit cards and recalc
 total. Package totals collapse all activity in the selected range into a net first-to-final diff;
 packages that return to their starting version and section are omitted. Slider positions correspond
 to UTC dates that contain changes, so long inactive periods do not consume empty positions.
+Slider, date-input, URL, range-summary, and live-region state updates are immediate. Commit and change
+counts use prefix totals so the range panel remains synchronous without scanning events. Package
+aggregation and commit rendering use a short trailing debounce so pointer interaction is not blocked
+by report rendering.
+The histogram remains a non-interactive visualization so pointer scrolling over it behaves normally.
+The range track has a taller transparent hit target than its visible line; clicking or dragging it
+moves the nearest range handle. Native handle dragging and keyboard operation remain available.
 
 Added, removed, and updated package summaries are fully expanded responsive grids rather than
-scrolling lists. Updated entries use wider grid cells for long requirement strings. The report uses
-up to 1200px of viewport width and no text style smaller than 14px.
+scrolling lists. Updated entries are grouped by the first changed component of the minimum versions
+accepted by their SemVer requirements: `major`, `minor`, `patch`, then `other` for requirements that
+SemVer cannot interpret, section-only moves, and changes with identical minimum-version components.
+Updated entries use wider grid cells for long requirement strings. The report uses up to 1200px of
+viewport width and no text style smaller than 14px.
 
 Commit-level update rows keep the package name on the first line and the complete old-to-new version
 diff on a second line. Long requirements wrap inside their own value boxes without separating the

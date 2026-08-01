@@ -14,3 +14,7 @@ diff-iris@0.0.4:
   dir: ""
   intents:
     - cozy-terms-punch
+diff-iris@0.0.5:
+  dir: ""
+  intents:
+    - five-bars-work

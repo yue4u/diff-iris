@@ -2,7 +2,7 @@ import { basename } from "node:path";
 import { spawn } from "node:child_process";
 import { Temporal } from "temporal-polyfill-lite";
 import { diffDependencies, parsePackageJson, type DependencySnapshot } from "./manifest.ts";
-import type { HistoryEvent, Report } from "./types.ts";
+import type { HistoryEvent, Report } from "../shared/types.ts";
 
 const zeroObjectId = /^0+$/;
 const rawChangePattern = /^:[0-7]{6} [0-7]{6} ([0-9a-f]+) ([0-9a-f]+) ([A-Z])[0-9]*$/;
@@ -12,6 +12,7 @@ interface RawCommit {
   sha: string;
   parents: string[];
   committedAt: string;
+  committerName: string;
   authorName: string;
   authorEmail: string;
   subject: string;
@@ -108,11 +109,12 @@ function parseLog(output: Uint8Array): RawCommit[] {
     const sha = tokens[index + 1];
     const parents = tokens[index + 2].split(" ").filter(Boolean);
     const committedAt = tokens[index + 3];
-    const authorName = tokens[index + 4];
-    const authorEmail = tokens[index + 5];
-    const subject = tokens[index + 6];
-    const message = tokens[index + 7].replace(/\n+$/, "");
-    index += 8;
+    const committerName = tokens[index + 4];
+    const authorName = tokens[index + 5];
+    const authorEmail = tokens[index + 6];
+    const subject = tokens[index + 7];
+    const message = tokens[index + 8].replace(/\n+$/, "");
+    index += 9;
 
     let previousBlob: string | null = null;
     let currentBlob: string | null = null;
@@ -134,6 +136,7 @@ function parseLog(output: Uint8Array): RawCommit[] {
         sha,
         parents,
         committedAt,
+        committerName,
         authorName,
         authorEmail,
         subject,
@@ -195,7 +198,7 @@ async function readHistory(cwd: string): Promise<GitHistory> {
   } catch {
     // Repositories without an origin still produce a report.
   }
-  const format = "%x00DP%x00%H%x00%P%x00%cI%x00%aN%x00%aE%x00%s%x00%B%x00";
+  const format = "%x00DP%x00%H%x00%P%x00%cI%x00%cN%x00%aN%x00%aE%x00%s%x00%B%x00";
   const log = await run(
     "git",
     [
@@ -289,6 +292,7 @@ export async function createReport(
         message: commit.message,
         authorName: commit.authorName,
         authorEmail: commit.authorEmail,
+        committerName: commit.committerName,
         committedAt: instant.toString(),
         epochMilliseconds: Number(instant.epochMilliseconds),
         utcDate: instant.toZonedDateTimeISO("UTC").toPlainDate().toString(),
