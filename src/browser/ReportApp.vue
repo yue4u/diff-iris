@@ -37,6 +37,7 @@ const updateLabels: Record<UpdateKind, [string, string]> = {
 const updateOrder: UpdateKind[] = ["major", "minor", "patch", "other"];
 const dates = [...new Set(report.events.map((event) => event.commit.utcDate))];
 const dateIndex = new Map(dates.map((date, index) => [date, index]));
+const parameters = new URLSearchParams(window.location.search);
 
 function lowerBound(value: string): number {
   let low = 0;
@@ -62,7 +63,6 @@ function upperBound(value: string): number {
 
 function rangeFromUrl(): [number, number] {
   const last = dates.length - 1;
-  const parameters = new URLSearchParams(window.location.search);
   const from = parameters.get("from");
   const to = parameters.get("to");
   const pattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -76,6 +76,8 @@ const start = ref(initialRange[0]);
 const end = ref(initialRange[1]);
 const renderedStart = ref(start.value);
 const renderedEnd = ref(end.value);
+const filterText = ref(parameters.get("q") ?? "");
+const renderedFilter = ref(filterText.value);
 const showAllCommits = ref(false);
 let renderTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -98,6 +100,8 @@ function saveRange(): void {
     const url = new URL(window.location.href);
     url.searchParams.set("from", dates[start.value]);
     url.searchParams.set("to", dates[end.value]);
+    if (filterText.value.trim()) url.searchParams.set("q", filterText.value.trim());
+    else url.searchParams.delete("q");
     window.history.replaceState(null, "", url);
   } catch {
     // Some embedded viewers do not allow file URL history updates.
@@ -110,6 +114,7 @@ function scheduleDetails(immediate = false): void {
   const apply = () => {
     renderedStart.value = start.value;
     renderedEnd.value = end.value;
+    renderedFilter.value = filterText.value;
     showAllCommits.value = false;
   };
   if (immediate) apply();
@@ -132,6 +137,11 @@ function inputNumber(event: Event): number {
   return Number((event.currentTarget as HTMLInputElement).value);
 }
 
+function setFilter(event: Event): void {
+  filterText.value = (event.currentTarget as HTMLInputElement).value;
+  scheduleDetails();
+}
+
 function resetRange(): void {
   start.value = 0;
   end.value = dates.length - 1;
@@ -143,20 +153,34 @@ const trackStyle = computed(() => ({
   "--start": `${(start.value / denominator) * 100}%`,
   "--end": `${(end.value / denominator) * 100}%`,
 }));
-const rangeSummary = computed(() => {
-  const commits = commitPrefix[end.value + 1] - commitPrefix[start.value];
-  const changes = changePrefix[end.value + 1] - changePrefix[start.value];
-  return `${dates[start.value]} – ${dates[end.value]} · ${commits} commits · ${changes} changes`;
+const visibleEvents = computed(() => {
+  const query = renderedFilter.value.trim().toLocaleLowerCase();
+  return report.events
+    .filter((event) => {
+      if (
+        event.commit.utcDate < dates[renderedStart.value] ||
+        event.commit.utcDate > dates[renderedEnd.value]
+      )
+        return false;
+      if (!query) return true;
+      return (
+        event.commit.authorName.toLocaleLowerCase().includes(query) ||
+        event.changes.some((change) => change.name.toLocaleLowerCase().includes(query))
+      );
+    })
+    .toReversed();
 });
-const visibleEvents = computed(() =>
-  report.events
-    .filter(
-      (event) =>
-        event.commit.utcDate >= dates[renderedStart.value] &&
-        event.commit.utcDate <= dates[renderedEnd.value],
-    )
-    .toReversed(),
-);
+const rangeSummary = computed(() => {
+  const hasFilter = renderedFilter.value.trim().length > 0;
+  const commits = hasFilter
+    ? visibleEvents.value.length
+    : commitPrefix[end.value + 1] - commitPrefix[start.value];
+  const changes = hasFilter
+    ? visibleEvents.value.reduce((total, event) => total + event.changes.length, 0)
+    : changePrefix[end.value + 1] - changePrefix[start.value];
+  const qualifier = hasFilter ? " matching" : "";
+  return `${dates[start.value]} – ${dates[end.value]} · ${commits}${qualifier} commits · ${changes} changes`;
+});
 
 function sameLocation(left?: DependencyLocation, right?: DependencyLocation): boolean {
   return left?.section === right?.section && left?.version === right?.version;
@@ -346,6 +370,7 @@ const view = {
   bins,
   committers,
   end,
+  filterText,
   packageSummary,
   rangeSummary,
   showAllCommits,
@@ -387,6 +412,7 @@ const view = {
       :lower-bound="lowerBound"
       :move-track="moveTrack"
       :reset-range="resetRange"
+      :set-filter="setFilter"
       :set-end="setEnd"
       :set-start="setStart"
       :start-track-drag="startTrackDrag"

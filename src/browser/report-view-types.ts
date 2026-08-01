@@ -16,6 +16,7 @@ export interface ReportView {
   bins: ComputedRef<number[]>;
   committers: ComputedRef<CommitterSummary[]>;
   end: Ref<number>;
+  filterText: Ref<string>;
   packageSummary: ComputedRef<Record<SummaryKind, SummaryEntry[]>>;
   rangeSummary: ComputedRef<string>;
   showAllCommits: Ref<boolean>;
