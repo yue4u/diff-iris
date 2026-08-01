@@ -25,6 +25,7 @@ export interface CommitMetadata {
   message: string;
   authorName: string;
   authorEmail: string;
+  committerName: string;
   committedAt: string;
   epochMilliseconds: number;
   utcDate: string;

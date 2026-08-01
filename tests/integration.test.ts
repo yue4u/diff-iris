@@ -97,6 +97,34 @@ test("renders an offline document and escapes untrusted report data", async () =
   expect(renderReport(report)).toMatchSnapshot();
 });
 
+test("normalizes SemVer ranges for updated-package grouping", async () => {
+  const directory = createRepository();
+  writeFileSync(
+    join(directory, "package.json"),
+    '{"dependencies":{"alpha":"^6.1.0","local":"workspace:"}}',
+  );
+  commit(directory, "Add dependencies");
+  writeFileSync(
+    join(directory, "package.json"),
+    '{"dependencies":{"alpha":"^9.6.1","local":"workspace:*"}}',
+  );
+  commit(directory, "Update dependencies");
+
+  const { report } = await createReport(directory);
+  const html = renderReport(report);
+  const start = html.indexOf('<script id="report-data" type="application/json">');
+  const contentStart = html.indexOf(">", start) + 1;
+  const end = html.indexOf("</script>", contentStart);
+  const clientReport = JSON.parse(html.slice(contentStart, end));
+
+  expect(clientReport.semver).toMatchObject({
+    "^6.1.0": [6, 1, 0],
+    "^9.6.1": [9, 6, 1],
+    "workspace:": null,
+    "workspace:*": null,
+  });
+});
+
 test("warns and continues past invalid historical manifests", async () => {
   const directory = createRepository();
   writeFileSync(join(directory, "package.json"), '{"dependencies":{"alpha":"1"}}');

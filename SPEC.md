@@ -44,9 +44,9 @@ The collector uses one NUL-delimited `git log --full-history --raw` invocation f
 blob IDs, then one `git cat-file --batch` invocation for unique manifest blobs. It must not spawn one
 Git process per commit. Binary process output is handled as `Uint8Array`, not Node.js `Buffer`.
 
-Commit data includes full SHA, canonical `.mailmap` author name and email, committer timestamp,
-subject, and complete multiline commit message. Timestamps are normalized with the `Temporal` API
-provided by `temporal-polyfill-lite` and grouped by UTC calendar date.
+Commit data includes full SHA, canonical `.mailmap` author name and email, canonical committer name,
+committer timestamp, subject, and complete multiline commit message. Timestamps are normalized with
+the `Temporal` API provided by `temporal-polyfill-lite` and grouped by UTC calendar date.
 
 ## HTML report
 
@@ -59,8 +59,9 @@ The report contains:
 
 - repository, ref, revision, report generation time, and diff-iris version metadata;
 - the analyzed repository's normalized HTTPS `origin` link when available;
-- net totals for visible commits, additions, updates, and removals, including package names and each
-  package's first-to-final version diff;
+- net totals for visible commits, additions, updates, and removals, including commit counts grouped
+  by canonical committer name, package names, and each package's first-to-final version diff;
+- native hint popovers on committer totals that list the packages changed by that committer;
 - a horizontal density timeline with start and end handles;
 - synchronized UTC start and end date inputs;
 - a reset-range control;
@@ -80,8 +81,11 @@ packages that return to their starting version and section are omitted. Slider p
 to UTC dates that contain changes, so long inactive periods do not consume empty positions.
 
 Added, removed, and updated package summaries are fully expanded responsive grids rather than
-scrolling lists. Updated entries use wider grid cells for long requirement strings. The report uses
-up to 1200px of viewport width and no text style smaller than 14px.
+scrolling lists. Updated entries are grouped by the first changed component of the minimum versions
+accepted by their SemVer requirements: `major`, `minor`, `patch`, then `other` for requirements that
+SemVer cannot interpret, section-only moves, and changes with identical minimum-version components.
+Updated entries use wider grid cells for long requirement strings. The report uses up to 1200px of
+viewport width and no text style smaller than 14px.
 
 Commit-level update rows keep the package name on the first line and the complete old-to-new version
 diff on a second line. Long requirements wrap inside their own value boxes without separating the

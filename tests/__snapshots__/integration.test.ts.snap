@@ -20,6 +20,10 @@ exports[`renders an offline document and escapes untrusted report data 1`] = `
   --updated: #aebfe0;
   --removed: #ff8fa3;
   --on-removed: #3b1f28;
+  --major: #f0a45d;
+  --minor: #7fa8f8;
+  --patch: #67c7bd;
+  --other: #a9a4b2;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 * {
@@ -99,8 +103,149 @@ code {
   margin: 12px 0 0;
   padding: 10px 0 0;
 }
+.total-committers {
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+}
+.total-committer-trigger {
+  align-items: center;
+  background: color-mix(in srgb, var(--paper) 52%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
+  width: auto;
+}
+.total-committer-trigger:hover,
+.total-committer-trigger:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.total-committer-trigger:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.total-committer-name {
+  color: var(--ink) !important;
+  font-weight: 650;
+}
+.total-committer-count {
+  background: var(--accent);
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-grid !important;
+  font-size: 14px !important;
+  min-width: 24px;
+  padding: 2px 6px;
+  place-items: center;
+}
+.committer-popover {
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 32%);
+  color: var(--ink);
+  inset: unset;
+  margin: 0;
+  max-height: min(320px, calc(100vh - 16px));
+  max-width: min(360px, calc(100vw - 16px));
+  overflow: auto;
+  padding: 12px 14px;
+  position: fixed;
+}
+.committer-popover-title {
+  display: block;
+  font-size: 15px;
+}
+.committer-popover-summary {
+  color: var(--muted);
+  display: block;
+  font-size: 14px;
+  margin-top: 2px;
+}
+.committer-popover-packages {
+  display: grid;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 14px;
+  gap: 4px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.committer-popover-packages li {
+  border-top: 1px solid var(--line);
+  overflow-wrap: anywhere;
+  padding-top: 4px;
+}
 .total-updated .total-packages {
+  display: block;
+}
+.total-package-group + .total-package-group {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+.total-package-group {
+  --group-color: var(--other);
+}
+.total-package-group-major {
+  --group-color: var(--major);
+}
+.total-package-group-minor {
+  --group-color: var(--minor);
+}
+.total-package-group-patch {
+  --group-color: var(--patch);
+}
+.total-package-group-title {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin: 0 0 10px;
+}
+.total-package-group-title::before {
+  align-self: center;
+  background: var(--group-color);
+  border-radius: 999px;
+  content: "";
+  height: 10px;
+  width: 10px;
+}
+.total-package-group-name {
+  color: var(--group-color) !important;
+  font-size: 16px !important;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.total-package-group-description {
+  font-size: 14px;
+}
+.total-package-group-count {
+  background: color-mix(in srgb, var(--group-color) 18%, transparent);
+  border-radius: 999px;
+  color: var(--ink) !important;
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 2px 8px;
+}
+.total-package-group-list {
+  display: grid;
+  gap: 6px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 .total-package {
   align-items: baseline;
@@ -448,6 +593,10 @@ button:hover {
     --updated: #526b9b;
     --removed: #d94762;
     --on-removed: #ffffff;
+    --major: #9a570f;
+    --minor: #315f9f;
+    --patch: #187268;
+    --other: #625d68;
   }
 }
 </style>
@@ -481,12 +630,13 @@ button:hover {
       <p id="range-summary"></p>
       <p class="sr-only" id="live-range" aria-live="polite"></p>
     </section>
-    <section class="totals" aria-label="Change totals"><div class="total total-commits"><strong id="total-commits">1</strong><span>commits</span></div><div class="total total-added"><strong id="total-added">1</strong><span>added</span><ul class="total-packages" id="total-added-packages"></ul></div><div class="total total-removed"><strong id="total-removed">0</strong><span>removed</span><ul class="total-packages" id="total-removed-packages"></ul></div><div class="total total-updated"><strong id="total-updated">0</strong><span>updated</span><ul class="total-packages" id="total-updated-packages"></ul></div></section>
+    <section class="totals" aria-label="Change totals"><div class="total total-commits"><strong id="total-commits">1</strong><span>commits</span><ul class="total-committers" id="total-committers" hidden></ul></div><div class="total total-added"><strong id="total-added">1</strong><span>added</span><ul class="total-packages" id="total-added-packages"></ul></div><div class="total total-removed"><strong id="total-removed">0</strong><span>removed</span><ul class="total-packages" id="total-removed-packages"></ul></div><div class="total total-updated"><strong id="total-updated">0</strong><span>updated</span><ul class="total-packages" id="total-updated-packages"></ul></div></section>
+    <div id="committer-popovers"></div>
     <div class="section-title"><h2>Dependency changes</h2></div>
     <section id="events" aria-label="Dependency change commits"></section>
     <p class="empty" id="empty-state" hidden>No commits fall within this range.</p>
   </main>
-  <script id="report-data" type="application/json">{"repository":"fixture","repositoryUrl":"https://github.com/example/fixture","revision":"2a9fbe92c9c546c01cac1bd90c6c9e3d66cc753d","ref":"main","generatedAt":"2026-01-01T00:00:00Z","firstDate":"2020-01-01","lastDate":"2020-01-01","totals":{"commits":1,"changes":1,"added":1,"updated":0,"removed":0},"events":[{"traversalIndex":0,"changes":[{"type":"added","name":"\\u003c/script\\u003e\\u003cimg src=x onerror=alert(1)\\u003e","current":{"section":"dependencies","version":"1"}}],"commit":{"sha":"2a9fbe92c9c546c01cac1bd90c6c9e3d66cc753d","subject":"Unsafe \\u003c/script\\u003e","message":"Unsafe \\u003c/script\\u003e\\n\\nBody \\u003cb\\u003emust remain text\\u003c/b\\u003e","authorName":"Test Author","authorEmail":"author@example.test","committedAt":"2020-01-01T00:00:00Z","epochMilliseconds":1577836800000,"utcDate":"2020-01-01"}}]}</script>
+  <script id="report-data" type="application/json">{"repository":"fixture","repositoryUrl":"https://github.com/example/fixture","revision":"2a9fbe92c9c546c01cac1bd90c6c9e3d66cc753d","ref":"main","generatedAt":"2026-01-01T00:00:00Z","firstDate":"2020-01-01","lastDate":"2020-01-01","totals":{"commits":1,"changes":1,"added":1,"updated":0,"removed":0},"events":[{"traversalIndex":0,"changes":[{"type":"added","name":"\\u003c/script\\u003e\\u003cimg src=x onerror=alert(1)\\u003e","current":{"section":"dependencies","version":"1"}}],"commit":{"sha":"2a9fbe92c9c546c01cac1bd90c6c9e3d66cc753d","subject":"Unsafe \\u003c/script\\u003e","message":"Unsafe \\u003c/script\\u003e\\n\\nBody \\u003cb\\u003emust remain text\\u003c/b\\u003e","authorName":"Test Author","authorEmail":"author@example.test","committerName":"Test Author","committedAt":"2020-01-01T00:00:00Z","epochMilliseconds":1577836800000,"utcDate":"2020-01-01"}}],"semver":{"1":[1,0,0]}}</script>
   <script>const report = JSON.parse(document.querySelector("#report-data").textContent);
 const dates = [...new Set(report.events.map((event) => event.commit.utcDate))];
 const startSlider = document.querySelector("#start-slider");
@@ -510,6 +660,8 @@ const totalPackageElements = {
   updated: document.querySelector("#total-updated-packages"),
   removed: document.querySelector("#total-removed-packages"),
 };
+const totalCommitters = document.querySelector("#total-committers");
+const committerPopovers = document.querySelector("#committer-popovers");
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -650,27 +802,147 @@ function summaryLocation(location, includeSection = false) {
   return includeSection ? \`\${location.version} · \${section}\` : location.version;
 }
 
+function updateKind(entry) {
+  const initial = report.semver[entry.initial.version];
+  const final = report.semver[entry.final.version];
+  if (!initial || !final) return "other";
+  if (initial[0] !== final[0]) return "major";
+  if (initial[1] !== final[1]) return "minor";
+  if (initial[2] !== final[2]) return "patch";
+  return "other";
+}
+
+function renderPackageSummaryEntry(kind, entry) {
+  const item = element("li", "total-package");
+  item.append(element("strong", "", entry.name));
+  if (kind === "added") {
+    item.append(element("span", "total-final", summaryLocation(entry.final)));
+  } else if (kind === "removed") {
+    item.append(element("span", "total-initial", summaryLocation(entry.initial)));
+  } else {
+    const moved = entry.initial.section !== entry.final.section;
+    item.append(
+      element("span", "total-initial", summaryLocation(entry.initial, moved)),
+      element("span", "arrow", "→"),
+      element("span", "total-final", summaryLocation(entry.final, moved)),
+    );
+  }
+  return item;
+}
+
 function renderPackageSummary(kind, entries) {
   const list = totalPackageElements[kind];
-  const items = entries.map((entry) => {
-    const item = element("li", "total-package");
-    item.append(element("strong", "", entry.name));
-    if (kind === "added") {
-      item.append(element("span", "total-final", summaryLocation(entry.final)));
-    } else if (kind === "removed") {
-      item.append(element("span", "total-initial", summaryLocation(entry.initial)));
-    } else {
-      const moved = entry.initial.section !== entry.final.section;
-      item.append(
-        element("span", "total-initial", summaryLocation(entry.initial, moved)),
-        element("span", "arrow", "→"),
-        element("span", "total-final", summaryLocation(entry.final, moved)),
+  let items;
+  if (kind === "updated") {
+    const groupLabels = {
+      major: ["Major", "breaking changes"],
+      minor: ["Minor", "new features"],
+      patch: ["Patch", "fixes"],
+      other: ["Other", "uncategorized"],
+    };
+    const groups = Map.groupBy(entries, updateKind);
+    items = ["major", "minor", "patch", "other"].flatMap((name) => {
+      const groupEntries = groups.get(name);
+      if (!groupEntries) return [];
+      const group = element("li", \`total-package-group total-package-group-\${name}\`);
+      const title = element("h3", "total-package-group-title");
+      title.append(
+        element("span", "total-package-group-name", groupLabels[name][0]),
+        element("span", "total-package-group-description", groupLabels[name][1]),
+        element(
+          "span",
+          "total-package-group-count",
+          \`\${groupEntries.length} \${groupEntries.length === 1 ? "package" : "packages"}\`,
+        ),
       );
-    }
-    return item;
-  });
+      group.append(title);
+      const groupList = element("ul", "total-package-group-list");
+      groupList.append(...groupEntries.map((entry) => renderPackageSummaryEntry(kind, entry)));
+      group.append(groupList);
+      return [group];
+    });
+  } else {
+    items = entries.map((entry) => renderPackageSummaryEntry(kind, entry));
+  }
   list.replaceChildren(...items);
   list.hidden = items.length === 0;
+}
+
+function renderCommitters(events) {
+  const groups = Map.groupBy(events, (event) => event.commit.committerName);
+  const committers = [...groups]
+    .map(([name, commits]) => ({
+      name,
+      count: commits.length,
+      packages: [
+        ...new Set(commits.flatMap((event) => event.changes.map((change) => change.name))),
+      ].sort((left, right) => left.localeCompare(right)),
+    }))
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
+  const popovers = [];
+  const items = committers.map(({ name, count, packages }, index) => {
+    const item = element("li", "total-committer");
+    const trigger = element("button", "total-committer-trigger");
+    const popoverId = \`committer-popover-\${index}\`;
+    trigger.type = "button";
+    trigger.setAttribute("popovertarget", popoverId);
+    trigger.setAttribute("aria-label", \`\${name}: \${count} commits; show changed packages\`);
+    trigger.append(
+      element("span", "total-committer-name", name),
+      element("strong", "total-committer-count", String(count)),
+    );
+    item.append(trigger);
+
+    const popover = element("div", "committer-popover");
+    popover.id = popoverId;
+    popover.setAttribute("popover", "hint");
+    popover.append(element("strong", "committer-popover-title", name));
+    popover.append(
+      element(
+        "span",
+        "committer-popover-summary",
+        \`\${packages.length} changed \${packages.length === 1 ? "package" : "packages"}\`,
+      ),
+    );
+    const packageList = element("ul", "committer-popover-packages");
+    packageList.append(...packages.map((name) => element("li", "", name)));
+    popover.append(packageList);
+    popovers.push(popover);
+
+    let hideTimer;
+    const show = () => {
+      clearTimeout(hideTimer);
+      if (!popover.matches(":popover-open")) popover.showPopover();
+      const triggerRect = trigger.getBoundingClientRect();
+      const popoverRect = popover.getBoundingClientRect();
+      const left = Math.min(
+        window.innerWidth - popoverRect.width - 8,
+        Math.max(8, triggerRect.left),
+      );
+      const below = triggerRect.bottom + 6;
+      const top =
+        below + popoverRect.height <= window.innerHeight
+          ? below
+          : Math.max(8, triggerRect.top - popoverRect.height - 6);
+      popover.style.left = \`\${left}px\`;
+      popover.style.top = \`\${top}px\`;
+    };
+    const hide = () => {
+      hideTimer = setTimeout(() => {
+        if (popover.matches(":popover-open")) popover.hidePopover();
+      }, 100);
+    };
+    trigger.addEventListener("pointerenter", show);
+    trigger.addEventListener("pointerleave", hide);
+    trigger.addEventListener("focus", show);
+    trigger.addEventListener("blur", hide);
+    popover.addEventListener("pointerenter", () => clearTimeout(hideTimer));
+    popover.addEventListener("pointerleave", hide);
+    return item;
+  });
+  committerPopovers.replaceChildren(...popovers);
+  totalCommitters.replaceChildren(...items);
+  totalCommitters.hidden = items.length === 0;
 }
 
 function renderEvent(event) {
@@ -759,6 +1031,7 @@ function update() {
   for (const kind of ["added", "updated", "removed"]) {
     renderPackageSummary(kind, packageSummary[kind]);
   }
+  renderCommitters(visible);
   const summary = \`\${dates[start]} – \${dates[end]} · \${visible.length} commits · \${changeCount} changes\`;
   rangeSummary.textContent = summary;
   liveRange.textContent = \`Selected \${summary}\`;

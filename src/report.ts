@@ -1,9 +1,19 @@
 import clientScript from "./client.js?raw";
 import styles from "./report.css.txt?raw";
 import packageJson from "../package.json?raw";
+import { minVersion } from "semver";
 import type { Report } from "./types.ts";
 
 const diffIrisVersion = (JSON.parse(packageJson) as { version: string }).version;
+
+function minimumVersion(requirement: string): [number, number, number] | null {
+  try {
+    const version = minVersion(requirement);
+    return version ? [version.major, version.minor, version.patch] : null;
+  } catch {
+    return null;
+  }
+}
 
 function serializeForHtml(value: unknown): string {
   return JSON.stringify(value)
@@ -23,6 +33,17 @@ function escapeAttribute(value: string): string {
 }
 
 export function renderReport(report: Report): string {
+  const requirements = new Set<string>();
+  for (const event of report.events) {
+    for (const change of event.changes) {
+      if (change.previous) requirements.add(change.previous.version);
+      if (change.current) requirements.add(change.current.version);
+    }
+  }
+  const semver = Object.fromEntries(
+    [...requirements].map((requirement) => [requirement, minimumVersion(requirement)]),
+  );
+  const clientReport = { ...report, semver };
   const repositoryLink = report.repositoryUrl
     ? ` · <a href="${escapeAttribute(report.repositoryUrl)}" rel="noreferrer" target="_blank">${escapeHtml(report.repositoryUrl)}</a>`
     : "";
@@ -33,9 +54,11 @@ export function renderReport(report: Report): string {
     [report.totals.updated, "updated"],
   ]
     .map(([value, label]) => {
-      const packages =
-        label === "commits" ? "" : `<ul class="total-packages" id="total-${label}-packages"></ul>`;
-      return `<div class="total total-${label}"><strong id="total-${label}">${value}</strong><span>${label}</span>${packages}</div>`;
+      const details =
+        label === "commits"
+          ? '<ul class="total-committers" id="total-committers" hidden></ul>'
+          : `<ul class="total-packages" id="total-${label}-packages"></ul>`;
+      return `<div class="total total-${label}"><strong id="total-${label}">${value}</strong><span>${label}</span>${details}</div>`;
     })
     .join("");
 
@@ -77,11 +100,12 @@ export function renderReport(report: Report): string {
       <p class="sr-only" id="live-range" aria-live="polite"></p>
     </section>
     <section class="totals" aria-label="Change totals">${totalCards}</section>
+    <div id="committer-popovers"></div>
     <div class="section-title"><h2>Dependency changes</h2></div>
     <section id="events" aria-label="Dependency change commits"></section>
     <p class="empty" id="empty-state" hidden>No commits fall within this range.</p>
   </main>
-  <script id="report-data" type="application/json">${serializeForHtml(report)}</script>
+  <script id="report-data" type="application/json">${serializeForHtml(clientReport)}</script>
   <script>${clientScript}</script>
 </body>
 </html>`;
