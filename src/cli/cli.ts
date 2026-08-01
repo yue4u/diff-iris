@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { Temporal } from "temporal-polyfill-lite";
 import packageJson from "../../package.json" with { type: "json" };
-import { createReport } from "./git.ts";
+import { createReport } from "./report/git.ts";
 import { renderReport } from "./report.ts";
 import { runOwnership } from "./ownership.ts";
 import type { Report } from "../shared/types.ts";

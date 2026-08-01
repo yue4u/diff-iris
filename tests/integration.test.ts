@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Temporal } from "temporal-polyfill-lite";
 import { expect, test } from "vite-plus/test";
 import { runCli } from "../src/cli/cli.ts";
-import { createReport } from "../src/cli/git.ts";
+import { createReport } from "../src/cli/report/git.ts";
 import { renderReport } from "../src/cli/report.ts";
 
 function git(cwd: string, ...args: string[]): string {

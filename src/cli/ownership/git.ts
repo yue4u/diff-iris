@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { gitError, runGit } from "../git/process.ts";
 import type {
   RankedAuthor,
   OwnershipMetric as Metric,
@@ -20,33 +21,8 @@ interface OwnershipCount {
   lines: number;
 }
 
-function collect(command: string, args: string[], cwd: string): Promise<Uint8Array> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
-    const stdout: Uint8Array[] = [];
-    const stderr: Uint8Array[] = [];
-    child.stdout.on("data", (chunk: Uint8Array) => stdout.push(chunk));
-    child.stderr.on("data", (chunk: Uint8Array) => stderr.push(chunk));
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        const size = stdout.reduce((total, chunk) => total + chunk.byteLength, 0);
-        const result = new Uint8Array(size);
-        let offset = 0;
-        for (const chunk of stdout) {
-          result.set(chunk, offset);
-          offset += chunk.byteLength;
-        }
-        resolve(result);
-      } else {
-        reject(new Error(new TextDecoder().decode(Buffer.concat(stderr)).trim() || "git failed"));
-      }
-    });
-  });
-}
-
 async function headFiles(cwd: string): Promise<HeadFile[]> {
-  const output = await collect("git", ["ls-tree", "-r", "-z", "HEAD"], cwd);
+  const output = await runGit(["ls-tree", "-r", "-z", "HEAD"], cwd);
   return new TextDecoder()
     .decode(output)
     .split("\0")
@@ -62,11 +38,7 @@ async function headFiles(cwd: string): Promise<HeadFile[]> {
 async function prepareCommitGraph(cwd: string, fileCount: number): Promise<void> {
   if (fileCount < 256) return;
   try {
-    await collect(
-      "git",
-      ["commit-graph", "write", "--reachable", "--changed-paths", "--no-progress"],
-      cwd,
-    );
+    await runGit(["commit-graph", "write", "--reachable", "--changed-paths", "--no-progress"], cwd);
   } catch {
     // The graph is an optional Git performance cache; read-only repositories still work.
   }
@@ -159,10 +131,7 @@ async function candidateFiles(
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) resolve();
-      else
-        reject(
-          new Error(new TextDecoder().decode(Buffer.concat(stderr)).trim() || "git log failed"),
-        );
+      else reject(gitError(stderr, "git log failed"));
     });
   });
   for await (const chunk of child.stdout) {
@@ -207,12 +176,7 @@ async function countHeadLines(cwd: string, files: HeadFile[]): Promise<number> {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) resolve();
-      else
-        reject(
-          new Error(
-            new TextDecoder().decode(Buffer.concat(stderr)).trim() || "git cat-file failed",
-          ),
-        );
+      else reject(gitError(stderr, "git cat-file failed"));
     });
   });
 
@@ -317,12 +281,7 @@ function readBlame(
         inspect(remainder);
         resolve();
       } else {
-        reject(
-          new Error(
-            new TextDecoder().decode(Buffer.concat(stderr)).trim() ||
-              `git blame failed for ${path}`,
-          ),
-        );
+        reject(gitError(stderr, `git blame failed for ${path}`));
       }
     });
   });
