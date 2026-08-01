@@ -38,7 +38,7 @@ jobs:
         run: pnpm run build
 
       - name: Clone Next.js history
-        run: git clone --filter=blob:none --no-tags https://github.com/vercel/next.js.git next.js
+        run: git clone --filter=blob:limit=64k --no-tags https://github.com/vercel/next.js.git next.js
 
       - name: Generate dependency report
         working-directory: next.js
