@@ -26,3 +26,7 @@ diff-iris@0.0.7:
   dir: ""
   intents:
     - huge-geckos-change
+diff-iris@0.0.8:
+  dir: ""
+  intents:
+    - bold-baboons-build
