@@ -50,10 +50,11 @@ the `Temporal` API provided by `temporal-polyfill-lite` and grouped by UTC calen
 
 ## HTML report
 
-The report is one offline HTML document with CSS and plain browser JavaScript embedded from `?raw`
-source imports. It makes no external requests and has no UI framework dependency. Repository and Git
-content is untrusted data: it is escaped during serialization and inserted into the UI with text DOM
-APIs, never interpreted through `innerHTML`.
+The report is one offline HTML document with embedded CSS and a compiled Vue Vapor client. The client
+is authored as type-checked TypeScript and Vue SFC templates, then bundled to an inline IIFE during
+`vp pack`; it makes no external requests. Repository and Git content is untrusted data: it is escaped
+during serialization and rendered as template text or text DOM properties, never interpreted through
+`innerHTML`.
 
 The report contains:
 
