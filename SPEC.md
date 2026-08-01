@@ -69,6 +69,10 @@ The report contains:
 - dependency changes grouped as `deps`, `dev`, `peer`, and `optional`;
 - Git-style addition/removal markers, struck-through deletions, and inline old-to-new version updates.
 
+The dependency-change section initially shows up to three commit cards. Additional cards use
+`hidden="until-found"` so browser Find can reveal matching commits and packages, and an explicit
+control reveals all remaining cards for ordinary browsing.
+
 The default dark theme uses the `#261C2C`, `#3E2C41`, `#5C527F`, and `#6E85B2` palette. A
 `prefers-color-scheme: light` theme uses palette-derived light surfaces and darker semantic text
 colors to retain readable contrast. Additions and final versions remain semantic green in both color
@@ -79,6 +83,13 @@ Moving either timeline handle or changing a date filters commit cards and recalc
 total. Package totals collapse all activity in the selected range into a net first-to-final diff;
 packages that return to their starting version and section are omitted. Slider positions correspond
 to UTC dates that contain changes, so long inactive periods do not consume empty positions.
+Slider, date-input, URL, range-summary, and live-region state updates are immediate. Commit and change
+counts use prefix totals so the range panel remains synchronous without scanning events. Package
+aggregation and commit rendering use a short trailing debounce so pointer interaction is not blocked
+by report rendering.
+The histogram remains a non-interactive visualization so pointer scrolling over it behaves normally.
+The range track has a taller transparent hit target than its visible line; clicking or dragging it
+moves the nearest range handle. Native handle dragging and keyboard operation remain available.
 
 Added, removed, and updated package summaries are fully expanded responsive grids rather than
 scrolling lists. Updated entries are grouped by the first changed component of the minimum versions

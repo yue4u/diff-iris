@@ -1,5 +1,19 @@
 const report = JSON.parse(document.querySelector("#report-data").textContent);
 const dates = [...new Set(report.events.map((event) => event.commit.utcDate))];
+const dateIndex = new Map(dates.map((date, index) => [date, index]));
+const commitsByDate = Array.from({ length: dates.length }, () => 0);
+const changesByDate = Array.from({ length: dates.length }, () => 0);
+for (const event of report.events) {
+  const index = dateIndex.get(event.commit.utcDate);
+  commitsByDate[index]++;
+  changesByDate[index] += event.changes.length;
+}
+const commitPrefix = [0];
+const changePrefix = [0];
+for (let index = 0; index < dates.length; index++) {
+  commitPrefix.push(commitPrefix[index] + commitsByDate[index]);
+  changePrefix.push(changePrefix[index] + changesByDate[index]);
+}
 const startSlider = document.querySelector("#start-slider");
 const endSlider = document.querySelector("#end-slider");
 const startDate = document.querySelector("#start-date");
@@ -340,10 +354,35 @@ function renderEvent(event) {
   return article;
 }
 
+function renderEvents(events) {
+  const hiddenCommits = [];
+  const articles = events.map((event, index) => {
+    const article = renderEvent(event);
+    if (index >= 3) {
+      article.setAttribute("hidden", "until-found");
+      article.addEventListener("beforematch", revealHiddenCommits);
+      hiddenCommits.push(article);
+    }
+    return article;
+  });
+
+  let revealButton;
+  function revealHiddenCommits() {
+    hiddenCommits.forEach((article) => article.removeAttribute("hidden"));
+    revealButton?.remove();
+  }
+  if (hiddenCommits.length > 0) {
+    revealButton = element("button", "reveal-commits", `Show ${hiddenCommits.length} more commits`);
+    revealButton.type = "button";
+    revealButton.addEventListener("click", revealHiddenCommits);
+    articles.push(revealButton);
+  }
+  eventList.replaceChildren(...articles);
+}
+
 function renderTimeline() {
   const binCount = Math.min(96, Math.max(1, dates.length));
   const bins = Array.from({ length: binCount }, () => 0);
-  const dateIndex = new Map(dates.map((date, index) => [date, index]));
   for (const event of report.events) {
     const index = dateIndex.get(event.commit.utcDate);
     const bin = Math.min(binCount - 1, Math.floor((index * binCount) / dates.length));
@@ -357,8 +396,33 @@ function renderTimeline() {
   });
 }
 
-function update() {
+let rangeRenderTimer;
+
+function renderSelectedRange(start, end) {
   const scrollTop = document.scrollingElement?.scrollTop;
+  const visible = report.events
+    .filter((event) => event.commit.utcDate >= dates[start] && event.commit.utcDate <= dates[end])
+    .toReversed();
+  const packageSummary = summarizePackages(visible);
+  const totals = {
+    commits: visible.length,
+    added: packageSummary.added.length,
+    updated: packageSummary.updated.length,
+    removed: packageSummary.removed.length,
+  };
+  for (const [name, value] of Object.entries(totals)) {
+    totalElements[name].textContent = String(value);
+  }
+  for (const kind of ["added", "updated", "removed"]) {
+    renderPackageSummary(kind, packageSummary[kind]);
+  }
+  renderCommitters(visible);
+  renderEvents(visible);
+  emptyState.hidden = visible.length !== 0;
+  if (scrollTop !== undefined) document.scrollingElement.scrollTop = scrollTop;
+}
+
+function update(renderImmediately = false) {
   let start = Number(startSlider.value);
   let end = Number(endSlider.value);
   if (start > end) {
@@ -374,31 +438,15 @@ function update() {
   const denominator = Math.max(1, dates.length - 1);
   sliderTrack.style.setProperty("--start", `${(start / denominator) * 100}%`);
   sliderTrack.style.setProperty("--end", `${(end / denominator) * 100}%`);
-
-  const visible = report.events
-    .filter((event) => event.commit.utcDate >= dates[start] && event.commit.utcDate <= dates[end])
-    .toReversed();
-  const changeCount = visible.reduce((total, event) => total + event.changes.length, 0);
-  const packageSummary = summarizePackages(visible);
-  const totals = {
-    commits: visible.length,
-    added: packageSummary.added.length,
-    updated: packageSummary.updated.length,
-    removed: packageSummary.removed.length,
-  };
-  for (const [name, value] of Object.entries(totals)) {
-    totalElements[name].textContent = String(value);
-  }
-  for (const kind of ["added", "updated", "removed"]) {
-    renderPackageSummary(kind, packageSummary[kind]);
-  }
-  renderCommitters(visible);
-  const summary = `${dates[start]} – ${dates[end]} · ${visible.length} commits · ${changeCount} changes`;
+  const commitCount = commitPrefix[end + 1] - commitPrefix[start];
+  const changeCount = changePrefix[end + 1] - changePrefix[start];
+  const summary = `${dates[start]} – ${dates[end]} · ${commitCount} commits · ${changeCount} changes`;
   rangeSummary.textContent = summary;
   liveRange.textContent = `Selected ${summary}`;
-  eventList.replaceChildren(...visible.map(renderEvent));
-  emptyState.hidden = visible.length !== 0;
-  if (scrollTop !== undefined) document.scrollingElement.scrollTop = scrollTop;
+
+  clearTimeout(rangeRenderTimer);
+  if (renderImmediately) renderSelectedRange(start, end);
+  else rangeRenderTimer = setTimeout(() => renderSelectedRange(start, end), 120);
 }
 
 if (dates.length) {
@@ -407,8 +455,41 @@ if (dates.length) {
     input.min = "0";
     input.max = String(last);
     input.step = "1";
-    input.addEventListener("input", update);
+    input.addEventListener("input", () => update());
   }
+  let draggedInput;
+  function moveInputToPointer(event, input) {
+    const bounds = sliderTrack.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+    const index = Math.round(ratio * last);
+    input.value = String(index);
+    input.focus({ preventScroll: true });
+    update();
+  }
+  sliderTrack.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const bounds = sliderTrack.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+    const index = Math.round(ratio * last);
+    const startDistance = Math.abs(index - Number(startSlider.value));
+    const endDistance = Math.abs(index - Number(endSlider.value));
+    draggedInput = startDistance <= endDistance ? startSlider : endSlider;
+    sliderTrack.setPointerCapture(event.pointerId);
+    moveInputToPointer(event, draggedInput);
+    event.preventDefault();
+  });
+  sliderTrack.addEventListener("pointermove", (event) => {
+    if (draggedInput) moveInputToPointer(event, draggedInput);
+  });
+  sliderTrack.addEventListener("pointerup", (event) => {
+    if (sliderTrack.hasPointerCapture(event.pointerId)) {
+      sliderTrack.releasePointerCapture(event.pointerId);
+    }
+    draggedInput = undefined;
+  });
+  sliderTrack.addEventListener("pointercancel", () => {
+    draggedInput = undefined;
+  });
   const [initialStart, initialEnd] = rangeFromUrl(last);
   startSlider.value = String(initialStart);
   endSlider.value = String(initialEnd);
@@ -430,7 +511,7 @@ if (dates.length) {
     update();
   });
   renderTimeline();
-  update();
+  update(true);
 } else {
   document.querySelector("#range-controls").hidden = true;
   emptyState.hidden = false;

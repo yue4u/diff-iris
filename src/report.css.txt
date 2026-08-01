@@ -300,6 +300,15 @@ code {
 .slider-track {
   --start: 0%;
   --end: 100%;
+  bottom: -16px;
+  cursor: ew-resize;
+  height: 28px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  touch-action: none;
+}
+.slider-track::before {
   background: linear-gradient(
     to right,
     transparent var(--start),
@@ -307,11 +316,12 @@ code {
     var(--accent) var(--end),
     transparent var(--end)
   );
-  bottom: -5px;
+  content: "";
   height: 4px;
   left: 0;
   position: absolute;
   right: 0;
+  top: 12px;
 }
 .slider {
   appearance: none;
@@ -391,6 +401,11 @@ button:hover {
   overflow: hidden;
   padding: 18px;
 }
+.commit[hidden="until-found"] {
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+}
 .commit-header {
   border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
@@ -465,6 +480,22 @@ button:hover {
 }
 .change-updated .package {
   width: auto;
+}
+.reveal-commits {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 14px;
+  padding: 7px 10px;
+}
+.reveal-commits:hover,
+.reveal-commits:focus-visible {
+  border-color: var(--accent);
 }
 .version-diff {
   align-items: baseline;

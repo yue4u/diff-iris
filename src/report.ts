@@ -67,6 +67,9 @@ export function renderReport(report: Report): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f8f5fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#261c2c" media="(prefers-color-scheme: dark)">
   <title>${escapeHtml(report.repository)} dependency history</title>
   <style>${styles}</style>
 </head>
