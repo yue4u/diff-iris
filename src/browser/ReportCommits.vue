@@ -6,7 +6,7 @@ type ChangeGroup = { section: DependencySection; label: string; changes: Depende
 
 defineProps<{
   dates: string[];
-  view: Pick<ReportView, "showAllCommits" | "visibleEvents">;
+  view: Pick<ReportView, "filterText" | "showAllCommits" | "visibleEvents">;
   changesBySection: (changes: DependencyChange[]) => ChangeGroup[];
   currentVersion: (change: DependencyChange) => string;
   operation: (change: DependencyChange) => string;
@@ -81,9 +81,11 @@ defineProps<{
   </section>
   <p v-else class="empty">
     {{
-      dates.length
-        ? "No commits fall within this range."
-        : "No dependency changes were found in package.json history."
+      view.filterText.value.trim()
+        ? "No commits match this filter."
+        : dates.length
+          ? "No commits fall within this range."
+          : "No dependency changes were found in package.json history."
     }}
   </p>
 </template>

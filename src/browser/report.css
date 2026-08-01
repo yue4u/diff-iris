@@ -390,7 +390,11 @@ code {
   gap: 5px;
   text-transform: uppercase;
 }
+.date-controls .filter-control {
+  flex: 1 1 280px;
+}
 input[type="date"],
+input[type="search"],
 button {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -398,6 +402,10 @@ button {
   color: var(--ink);
   font: inherit;
   padding: 8px 10px;
+}
+input[type="search"] {
+  min-width: 0;
+  width: 100%;
 }
 button {
   cursor: pointer;

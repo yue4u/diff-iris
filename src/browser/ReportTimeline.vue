@@ -3,11 +3,12 @@ import type { ReportView } from "./report-view-types.ts";
 
 defineProps<{
   dates: string[];
-  view: Pick<ReportView, "bins" | "end" | "rangeSummary" | "start" | "trackStyle">;
+  view: Pick<ReportView, "bins" | "end" | "filterText" | "rangeSummary" | "start" | "trackStyle">;
   inputNumber: (event: Event) => number;
   lowerBound: (value: string) => number;
   moveTrack: (event: PointerEvent) => void;
   resetRange: () => void;
+  setFilter: (event: Event) => void;
   setEnd: (value: number) => void;
   setStart: (value: number) => void;
   startTrackDrag: (event: PointerEvent) => void;
@@ -63,6 +64,14 @@ defineProps<{
       />
     </div>
     <div class="date-controls">
+      <label class="filter-control"
+        >Filter committers or packages<input
+          id="report-filter"
+          type="search"
+          placeholder="e.g. renovate or vue"
+          :value="view.filterText.value"
+          @input="setFilter"
+      /></label>
       <label
         >From (UTC)<input
           id="start-date"
