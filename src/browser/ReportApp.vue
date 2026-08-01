@@ -222,7 +222,7 @@ function locationText(location?: DependencyLocation, includeSection = false): st
 }
 
 const committers = computed(() =>
-  [...Map.groupBy(visibleEvents.value, (event) => event.commit.committerName)]
+  [...Map.groupBy(visibleEvents.value, (event) => event.commit.authorName)]
     .map(([name, commits]) => {
       const summary = summarizePackages(commits);
       return {
