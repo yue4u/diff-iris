@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Temporal } from "temporal-polyfill-lite";
 import { expect, test } from "vite-plus/test";
 import { runCli } from "../src/cli/cli.ts";
-import { createReport } from "../src/cli/git.ts";
+import { createReport } from "../src/cli/report/git.ts";
 import { renderReport } from "../src/cli/report.ts";
 
 function git(cwd: string, ...args: string[]): string {
@@ -41,6 +41,20 @@ function createRepository(): string {
   git(directory, "config", "commit.gpgsign", "false");
   git(directory, "remote", "add", "origin", "git@github.com:example/fixture.git");
   return directory;
+}
+
+function commitAs(cwd: string, name: string, email: string, subject: string): void {
+  git(cwd, "add", "-A");
+  execFileSync("git", ["commit", "-m", subject], {
+    cwd,
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: name,
+      GIT_AUTHOR_EMAIL: email,
+      GIT_COMMITTER_NAME: "Merge Operator",
+      GIT_COMMITTER_EMAIL: "merge@example.test",
+    },
+  });
 }
 
 test("collects reachable non-merge changes and full commit messages", async () => {
@@ -249,4 +263,146 @@ test("reports missing repository context and unsupported arguments", async () =>
     }),
   ).toBe(1);
   expect(stderr).toContain("must not be after");
+});
+
+test("counts HEAD files with surviving lines by matching authors", async () => {
+  const directory = createRepository();
+  writeFileSync(join(directory, "alice.txt"), "Alice owns this file.\n");
+  writeFileSync(join(directory, "shared.txt"), "Alice line.\n");
+  commitAs(directory, "Alice Example", "alice@example.test", "Add Alice files");
+  git(directory, "mv", "alice.txt", "renamed-alice.txt");
+  writeFileSync(join(directory, "bob.txt"), "Bob owns this file.\n");
+  writeFileSync(join(directory, "shared.txt"), "Alice line.\nBob line.\n");
+  commitAs(directory, "Bob Example", "bob@example.test", "Add Bob lines");
+
+  let stdout = "";
+  let stderr = "";
+  const output = {
+    write(chunk: string | Uint8Array) {
+      stdout += typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      return true;
+    },
+  };
+  const errors = {
+    write(chunk: string | Uint8Array) {
+      stderr += typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+      return true;
+    },
+  };
+
+  expect(
+    await runCli({
+      args: ["ownership", "Alice Example", "--jobs", "2"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(0);
+  expect(stdout).toBe(
+    "2 / 3 files (66.67%) and 2 / 4 lines (50.00%) are attributed to Alice Example\n",
+  );
+  expect(stderr).toBe("");
+
+  stdout = "";
+  expect(
+    await runCli({
+      args: ["ownership", "Alice|Bob"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(0);
+  expect(stdout).toBe(
+    "3 / 3 files (100.00%) and 4 / 4 lines (100.00%) are attributed to Alice|Bob\n",
+  );
+
+  stdout = "";
+  expect(
+    await runCli({
+      args: ["ownership", "--rank", "--jobs=2"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(0);
+  expect(stdout).toBe(
+    "1. Alice Example — 2 / 3 files (66.67%) · 2 / 4 lines (50.00%)\n" +
+      "2. Bob Example — 2 / 3 files (66.67%) · 2 / 4 lines (50.00%)\n",
+  );
+
+  stdout = "";
+  expect(
+    await runCli({
+      args: ["ownership", "--rank", "--format=json", "--jobs=2"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(0);
+  expect(JSON.parse(stdout)).toEqual({
+    mode: "rank",
+    authors: [
+      {
+        author: "Alice Example",
+        files: { count: 2, percentage: 66.67, total: 3 },
+        lines: { count: 2, percentage: 50, total: 4 },
+        rank: 1,
+      },
+      {
+        author: "Bob Example",
+        files: { count: 2, percentage: 66.67, total: 3 },
+        lines: { count: 2, percentage: 50, total: 4 },
+        rank: 2,
+      },
+    ],
+    files: 3,
+    lines: 4,
+  });
+
+  stdout = "";
+  expect(
+    await runCli({
+      args: ["ownership", "--rank", "--format", "html", "--jobs=2"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(0);
+  expect(stdout.startsWith("<!doctype html>")).toBe(true);
+  expect(stdout).toContain('<div id="ownership-app"></div>');
+  expect(stdout).toContain('<script id="ownership-data" type="application/json">');
+  expect(stdout).toContain("Alice Example");
+
+  stderr = "";
+  expect(
+    await runCli({
+      args: ["ownership", "["],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(1);
+  expect(stderr).toContain("invalid author pattern");
+
+  stderr = "";
+  expect(
+    await runCli({
+      args: ["ownership", "--rank", "Alice"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(1);
+  expect(stderr).toContain("cannot be combined");
+
+  stderr = "";
+  expect(
+    await runCli({
+      args: ["ownership", "Alice", "--format", "xml"],
+      cwd: directory,
+      stdout: output,
+      stderr: errors,
+    }),
+  ).toBe(1);
+  expect(stderr).toContain("text, json, or html");
 });

@@ -4,8 +4,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { Temporal } from "temporal-polyfill-lite";
 import packageJson from "../../package.json" with { type: "json" };
-import { createReport } from "./git.ts";
+import { createReport } from "./report/git.ts";
 import { renderReport } from "./report.ts";
+import { runOwnership } from "./ownership.ts";
 import type { Report } from "../shared/types.ts";
 
 interface CliOptions {
@@ -16,12 +17,15 @@ interface CliOptions {
   stderr?: Pick<NodeJS.WriteStream, "write">;
 }
 
-const help = `Usage: diff-iris
+const help = `Usage: diff-iris [COMMAND]
 
 Analyze dependency changes in the root package.json reachable from HEAD.
 
 When stdout is a terminal, writes .diff-iris/index.html in the repository.
 When stdout is redirected or piped, writes the HTML document to stdout.
+
+Commands:
+  ownership PATTERN  Measure surviving files and lines attributed to matching authors
 
 Options:
       --since DATE Filter changes on or after DATE (UTC, YYYY-MM-DD)
@@ -89,6 +93,10 @@ export async function runCli(options: CliOptions = {}): Promise<number> {
   const stdout = options.stdout ?? process.stdout;
   const stderr = options.stderr ?? process.stderr;
   const isTTY = options.isTTY ?? Boolean(process.stdout.isTTY);
+
+  if (args[0] === "ownership") {
+    return runOwnership({ args: args.slice(1), cwd, stdout, stderr });
+  }
 
   if (args.includes("--help") || args.includes("-h")) {
     stdout.write(help);

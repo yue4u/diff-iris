@@ -1,8 +1,8 @@
 import { basename } from "node:path";
-import { spawn } from "node:child_process";
 import { Temporal } from "temporal-polyfill-lite";
-import { diffDependencies, parsePackageJson, type DependencySnapshot } from "./manifest.ts";
-import type { HistoryEvent, Report } from "../shared/types.ts";
+import { gitText, runGit } from "../git/process.ts";
+import { diffDependencies, parsePackageJson, type DependencySnapshot } from "../manifest.ts";
+import type { HistoryEvent, Report } from "../../shared/types.ts";
 
 const zeroObjectId = /^0+$/;
 const rawChangePattern = /^:[0-7]{6} [0-7]{6} ([0-9a-f]+) ([0-9a-f]+) ([A-Z])[0-9]*$/;
@@ -55,48 +55,11 @@ function normalizeRemoteUrl(remote: string): string | null {
   return null;
 }
 
-function run(command: string, args: string[], cwd: string, input?: string): Promise<Uint8Array> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
-    const stdout: Uint8Array[] = [];
-    const stderr: Uint8Array[] = [];
-
-    child.stdout.on("data", (chunk: Uint8Array) => stdout.push(chunk));
-    child.stderr.on("data", (chunk: Uint8Array) => stderr.push(chunk));
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve(concatBytes(stdout));
-        return;
-      }
-      const detail = decoder.decode(concatBytes(stderr)).trim();
-      reject(new Error(detail || `${command} exited with status ${String(code)}`));
-    });
-
-    child.stdin.end(input);
-  });
-}
-
-function concatBytes(chunks: Uint8Array[]): Uint8Array {
-  const length = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
-  const output = new Uint8Array(length);
-  let offset = 0;
-  for (const chunk of chunks) {
-    output.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return output;
-}
-
 function indexOfByte(bytes: Uint8Array, value: number, from: number): number {
   for (let index = from; index < bytes.byteLength; index++) {
     if (bytes[index] === value) return index;
   }
   return -1;
-}
-
-async function gitText(args: string[], cwd: string): Promise<string> {
-  return decoder.decode(await run("git", args, cwd)).trim();
 }
 
 function parseLog(output: Uint8Array): RawCommit[] {
@@ -199,8 +162,7 @@ async function readHistory(cwd: string): Promise<GitHistory> {
     // Repositories without an origin still produce a report.
   }
   const format = "%x00DP%x00%H%x00%P%x00%cI%x00%cN%x00%aN%x00%aE%x00%s%x00%B%x00";
-  const log = await run(
-    "git",
+  const log = await runGit(
     [
       "log",
       "--full-history",
@@ -226,12 +188,7 @@ async function readHistory(cwd: string): Promise<GitHistory> {
       commits.flatMap((commit) => [commit.previousBlob, commit.currentBlob]).filter(Boolean),
     ),
   ] as string[];
-  const batch = await run(
-    "git",
-    ["cat-file", "--batch"],
-    repositoryRoot,
-    `${objectIds.join("\n")}\n`,
-  );
+  const batch = await runGit(["cat-file", "--batch"], repositoryRoot, `${objectIds.join("\n")}\n`);
 
   return {
     repositoryRoot,
