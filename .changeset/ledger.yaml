@@ -18,3 +18,7 @@ diff-iris@0.0.5:
   dir: ""
   intents:
     - five-bars-work
+diff-iris@0.0.6:
+  dir: ""
+  intents:
+    - fresh-peas-smoke

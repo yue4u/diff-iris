@@ -179,8 +179,27 @@ code {
 }
 .committer-popover-packages li {
   border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1.25em 1fr;
   overflow-wrap: anywhere;
   padding-top: 4px;
+}
+.committer-package-kind {
+  font-weight: 800;
+  text-align: center;
+}
+.committer-package-kind-added {
+  color: var(--added);
+}
+.committer-package-kind-updated {
+  color: var(--updated);
+}
+.committer-package-kind-removed {
+  color: var(--removed);
+}
+.committer-package-name-default {
+  grid-column: 2;
 }
 .total-updated .total-packages {
   display: block;

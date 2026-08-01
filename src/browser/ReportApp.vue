@@ -222,14 +222,17 @@ function locationText(location?: DependencyLocation, includeSection = false): st
 }
 
 const committers = computed(() =>
-  [...Map.groupBy(visibleEvents.value, (event) => event.commit.committerName)]
-    .map(([name, commits]) => ({
-      name,
-      count: commits.length,
-      packages: [
-        ...new Set(commits.flatMap((event) => event.changes.map((change) => change.name))),
-      ].sort((left, right) => left.localeCompare(right)),
-    }))
+  [...Map.groupBy(visibleEvents.value, (event) => event.commit.authorName)]
+    .map(([name, commits]) => {
+      const summary = summarizePackages(commits);
+      return {
+        name,
+        count: commits.length,
+        packages: (["added", "removed", "updated"] as const).flatMap((type) =>
+          summary[type].map((entry) => ({ name: entry.name, type })),
+        ),
+      };
+    })
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name)),
 );
 

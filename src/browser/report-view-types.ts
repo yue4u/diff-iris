@@ -8,7 +8,8 @@ export type SummaryEntry = {
   initial?: DependencyLocation;
   final?: DependencyLocation;
 };
-export type CommitterSummary = { name: string; count: number; packages: string[] };
+export type CommitterPackage = { name: string; type: SummaryKind };
+export type CommitterSummary = { name: string; count: number; packages: CommitterPackage[] };
 export type UpdateGroup = { kind: UpdateKind; entries: SummaryEntry[] };
 
 export interface ReportView {
