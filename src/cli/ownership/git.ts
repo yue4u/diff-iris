@@ -21,6 +21,11 @@ interface OwnershipCount {
   lines: number;
 }
 
+interface HeadInventory {
+  files: HeadFile[];
+  lines: number;
+}
+
 async function headFiles(cwd: string): Promise<HeadFile[]> {
   const output = await runGit(["ls-tree", "-r", "-z", "HEAD"], cwd);
   return new TextDecoder()
@@ -148,8 +153,8 @@ async function candidateFiles(
   return files.filter((file) => candidates.has(file.path));
 }
 
-async function countHeadLines(cwd: string, files: HeadFile[]): Promise<number> {
-  if (files.length === 0) return 0;
+async function inspectHeadFiles(cwd: string, files: HeadFile[]): Promise<HeadInventory> {
+  if (files.length === 0) return { files: [], lines: 0 };
   const child = spawn("git", ["cat-file", "--batch"], {
     cwd,
     stdio: ["pipe", "pipe", "pipe"],
@@ -163,9 +168,15 @@ async function countHeadLines(cwd: string, files: HeadFile[]): Promise<number> {
   let newlines = 0;
   let lastByte = -1;
   let total = 0;
+  let fileIndex = 0;
+  const textFiles: HeadFile[] = [];
 
   const finishBlob = (): void => {
-    if (!binary) total += newlines + (blobSize > 0 && lastByte !== 10 ? 1 : 0);
+    if (!binary) {
+      textFiles.push(files[fileIndex]);
+      total += newlines + (blobSize > 0 && lastByte !== 10 ? 1 : 0);
+    }
+    fileIndex++;
     remaining = undefined;
     skipSeparator = true;
   };
@@ -220,7 +231,8 @@ async function countHeadLines(cwd: string, files: HeadFile[]): Promise<number> {
   if (remaining !== undefined || header || skipSeparator) {
     throw new Error("git cat-file returned truncated blob data");
   }
-  return total;
+  if (fileIndex !== files.length) throw new Error("git cat-file returned too few blobs");
+  return { files: textFiles, lines: total };
 }
 
 function readBlame(
@@ -342,13 +354,18 @@ async function countAuthors(
   cwd: string,
   files: HeadFile[],
   jobs: number,
+  includedPaths: Promise<Set<string>>,
 ): Promise<Map<string, OwnershipCount>> {
   const totals = new Map<string, OwnershipCount>();
   await mapConcurrent(
     files,
     jobs,
-    (file) => blameAuthors(cwd, file.path),
-    (authors) => {
+    async (file) => ({
+      authors: await blameAuthors(cwd, file.path),
+      included: (await includedPaths).has(file.path),
+    }),
+    ({ authors, included }) => {
+      if (!included) return;
       for (const [author, lines] of authors) {
         const total = totals.get(author) ?? { files: 0, lines: 0 };
         total.files++;
@@ -389,15 +406,19 @@ function rankAuthors(
 export async function analyzeRank(cwd: string, jobs: number): Promise<OwnershipReport> {
   const files = await headFiles(cwd);
   await prepareCommitGraph(cwd, files.length);
-  const [authors, totalLines] = await Promise.all([
-    countAuthors(cwd, files, jobs),
-    countHeadLines(cwd, files),
+  const inventoryPromise = inspectHeadFiles(cwd, files);
+  const includedPaths = inventoryPromise.then(
+    (inventory) => new Set(inventory.files.map((file) => file.path)),
+  );
+  const [authors, inventory] = await Promise.all([
+    countAuthors(cwd, files, jobs, includedPaths),
+    inventoryPromise,
   ]);
   return {
     mode: "rank",
-    authors: rankAuthors(authors, files.length, totalLines),
-    files: files.length,
-    lines: totalLines,
+    authors: rankAuthors(authors, inventory.files.length, inventory.lines),
+    files: inventory.files.length,
+    lines: inventory.lines,
   };
 }
 
@@ -409,15 +430,20 @@ export async function analyzeMatch(
 ): Promise<OwnershipReport> {
   const files = await headFiles(cwd);
   await prepareCommitGraph(cwd, files.length);
-  const [candidates, totalLines] = await Promise.all([
+  const [candidates, inventory] = await Promise.all([
     candidateFiles(cwd, files, pattern),
-    countHeadLines(cwd, files),
+    inspectHeadFiles(cwd, files),
   ]);
-  const ownership = await countOwnership(candidates, jobs, (path) => blameFile(cwd, path, pattern));
+  const textPaths = new Set(inventory.files.map((file) => file.path));
+  const ownership = await countOwnership(
+    candidates.filter((file) => textPaths.has(file.path)),
+    jobs,
+    (path) => blameFile(cwd, path, pattern),
+  );
   return {
     mode: "match",
     patterns,
-    files: metric(ownership.files, files.length),
-    lines: metric(ownership.lines, totalLines),
+    files: metric(ownership.files, inventory.files.length),
+    lines: metric(ownership.lines, inventory.lines),
   };
 }

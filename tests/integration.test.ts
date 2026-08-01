@@ -269,6 +269,7 @@ test("counts HEAD files with surviving lines by matching authors", async () => {
   const directory = createRepository();
   writeFileSync(join(directory, "alice.txt"), "Alice owns this file.\n");
   writeFileSync(join(directory, "shared.txt"), "Alice line.\n");
+  writeFileSync(join(directory, "binary.dat"), new Uint8Array([0, 10, 10, 10]));
   commitAs(directory, "Alice Example", "alice@example.test", "Add Alice files");
   git(directory, "mv", "alice.txt", "renamed-alice.txt");
   writeFileSync(join(directory, "bob.txt"), "Bob owns this file.\n");
