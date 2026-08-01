@@ -22,3 +22,7 @@ diff-iris@0.0.6:
   dir: ""
   intents:
     - fresh-peas-smoke
+diff-iris@0.0.7:
+  dir: ""
+  intents:
+    - huge-geckos-change
